@@ -10,8 +10,7 @@ phases:
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-2:506452456940:secret:bolt-4Ug3Gv --query 'SecretString' --output text | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' > .env
       - echo Generating dynamic tag...
-      - TAG="build-${CODEBUILD_BUILD_ID}"
-      - echo "Using tag: $TAG"
+      - TAG=latest
   build:
     commands:
       - echo Build started on `date`
