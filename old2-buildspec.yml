@@ -1,13 +1,20 @@
 version: 0.2
-run-as: root
-
 
 phases:
+  install:
+    commands:
+      - echo Installing jq...
+      - apt-get update && apt-get install -y jq  # Install jq if not available
+      - echo Installing AWS CLI...
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      - sudo ./aws/install
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 506452456940.dkr.ecr.us-east-2.amazonaws.com
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Fetching secrets from Secrets Manager...
       - aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-2:506452456940:secret:bolt-4Ug3Gv --query 'SecretString' --output text | jq -r 'to_entries | .[] | "\(.key)=\(.value)"' > .env
       - echo Generating dynamic tag...
       - TAG="build-${CODEBUILD_BUILD_ID}"
