@@ -1,25 +1,46 @@
 version: 0.2
 run-as: root
 
-
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 506452456940.dkr.ecr.us-east-2.amazonaws.com
+      - echo Fetching secrets from Secrets Manager...
+      # Fetch the entire secret as JSON
+      - SECRETS=$(aws secretsmanager get-secret-value --secret-id arn:aws:secretsmanager:us-east-2:506452456940:secret:bolt-4Ug3Gv --query 'SecretString' --output text)
+      # Parse individual keys from the JSON (optional step to log or verify)
+      - export GROQ_API_KEY=$(echo $SECRETS | jq -r '.GROQ_API_KEY')
+      - export OPENAI_API_KEY=$(echo $SECRETS | jq -r '.OPENAI_API_KEY')
+      - export ANTHROPIC_API_KEY=$(echo $SECRETS | jq -r '.ANTHROPIC_API_KEY')
+      - export OPEN_ROUTER_API_KEY=$(echo $SECRETS | jq -r '.OPEN_ROUTER_API_KEY')
+      - export GOOGLE_GENERATIVE_AI_API_KEY=$(echo $SECRETS | jq -r '.GOOGLE_GENERATIVE_AI_API_KEY')
+      - export OLLAMA_API_BASE_URL=$(echo $SECRETS | jq -r '.OLLAMA_API_BASE_URL')
+      - echo Secrets fetched successfully.
+      - echo Setting repository URI...
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo Using image tag: $TAG
+      - echo Container Name: $CONTAINER_NAME  # Print container name
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...          
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
-      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG      
+      - echo Building the Docker image...
+      - docker build \
+        --build-arg GROQ_API_KEY=$GROQ_API_KEY \
+        --build-arg OPENAI_API_KEY=$OPENAI_API_KEY \
+        --build-arg ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+        --build-arg OPEN_ROUTER_API_KEY=$OPEN_ROUTER_API_KEY \
+        --build-arg GOOGLE_GENERATIVE_AI_API_KEY=$GOOGLE_GENERATIVE_AI_API_KEY \
+        --build-arg OLLAMA_API_BASE_URL=$OLLAMA_API_BASE_URL \
+        -t $IMAGE_REPO_NAME:$TAG .
+      - docker tag $IMAGE_REPO_NAME:$TAG $REPOSITORY_URI:$TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:$TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$TAG > imagedefinitions.json
 artifacts:
-    files: imagedefinitions.json
+  files: imagedefinitions.json
+
