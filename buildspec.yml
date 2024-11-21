@@ -20,29 +20,8 @@ phases:
     commands:
       # Step 3: Build the Docker image
       - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG \
-        --build-arg GROQ_API_KEY=$GROQ_API_KEY \
-        --build-arg OPENAI_API_KEY=$OPENAI_API_KEY \
-        --build-arg ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-        --build-arg OPEN_ROUTER_API_KEY=$OPEN_ROUTER_API_KEY \
-        --build-arg GOOGLE_GENERATIVE_AI_API_KEY=$GOOGLE_GENERATIVE_AI_API_KEY \
-        --build-arg OLLAMA_API_BASE_URL=$OLLAMA_API_BASE_URL \
-        --build-arg STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY \
-        --build-arg STRIPE_PUBLIC_KEY=$STRIPE_PUBLIC_KEY \
-        --build-arg GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID \
-        --build-arg GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET \
-        --build-arg GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID \
-        --build-arg GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET \
-        --build-arg APP_URL=$APP_URL \
-        --build-arg SESSION_SECRET=$SESSION_SECRET \
-        --build-arg DATABASE_URL=$DATABASE_URL \
-        --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
-        --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-        --build-arg AWS_REGION=$AWS_REGION \
-        --build-arg AWS_BUCKET_NAME=$AWS_BUCKET_NAME \
-        --build-arg NETLIFY_AUTH_TOKEN=$NETLIFY_AUTH_TOKEN .
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG --build-arg GROQ_API_KEY=$GROQ_API_KEY --build-arg OPENAI_API_KEY=$OPENAI_API_KEY --build-arg ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY --build-arg OPEN_ROUTER_API_KEY=$OPEN_ROUTER_API_KEY --build-arg GOOGLE_GENERATIVE_AI_API_KEY=$GOOGLE_GENERATIVE_AI_API_KEY --build-arg OLLAMA_API_BASE_URL=$OLLAMA_API_BASE_URL --build-arg STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY --build-arg STRIPE_PUBLIC_KEY=$STRIPE_PUBLIC_KEY --build-arg GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID --build-arg GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET --build-arg GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID --build-arg GITHUB_CLIENT_SECRET=$GITHUB_CLIENT_SECRET --build-arg APP_URL=$APP_URL --build-arg SESSION_SECRET=$SESSION_SECRET --build-arg DATABASE_URL=$DATABASE_URL --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY --build-arg AWS_REGION=$AWS_REGION --build-arg AWS_BUCKET_NAME=$AWS_BUCKET_NAME --build-arg NETLIFY_AUTH_TOKEN=$NETLIFY_AUTH_TOKEN .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-      
   post_build:
     commands:
       - echo Build completed on `date`
