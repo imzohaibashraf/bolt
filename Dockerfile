@@ -1,52 +1,76 @@
+# Base image setup
 ARG BASE=node:20.18.0
 FROM ${BASE} AS base
 
 WORKDIR /app
 
-# Install dependencies (this step is cached as long as the dependencies don't change)
+# Install dependencies
 COPY package.json pnpm-lock.yaml ./
-
 RUN corepack enable pnpm && pnpm install
 
-# Copy the rest of your app's source code
+# Copy the application code
 COPY . .
 
-# Expose the port the app runs on
+# Expose the port
 EXPOSE 5173
 
 # Production image
 FROM base AS bolt-ai-production
 
-# Define environment variables with default values or let them be overridden
+# Define build arguments for secrets
 ARG GROQ_API_KEY
 ARG OPENAI_API_KEY
 ARG ANTHROPIC_API_KEY
 ARG OPEN_ROUTER_API_KEY
 ARG GOOGLE_GENERATIVE_AI_API_KEY
 ARG OLLAMA_API_BASE_URL
-ARG VITE_LOG_LEVEL=debug
+ARG STRIPE_SECRET_KEY
+ARG STRIPE_PUBLIC_KEY
+ARG GOOGLE_CLIENT_ID
+ARG GOOGLE_CLIENT_SECRET
+ARG GITHUB_CLIENT_ID
+ARG GITHUB_CLIENT_SECRET
+ARG APP_URL
+ARG SESSION_SECRET
+ARG DATABASE_URL
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_REGION
+ARG AWS_BUCKET_NAME
+ARG NETLIFY_AUTH_TOKEN
 
-ENV WRANGLER_SEND_METRICS=false \
-    GROQ_API_KEY=${GROQ_API_KEY} \
+# Set environment variables for production
+ENV GROQ_API_KEY=${GROQ_API_KEY} \
     OPENAI_API_KEY=${OPENAI_API_KEY} \
     ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY} \
     OPEN_ROUTER_API_KEY=${OPEN_ROUTER_API_KEY} \
     GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY} \
     OLLAMA_API_BASE_URL=${OLLAMA_API_BASE_URL} \
-    VITE_LOG_LEVEL=${VITE_LOG_LEVEL}
+    STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY} \
+    STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY} \
+    GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
+    GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET} \
+    GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID} \
+    GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET} \
+    APP_URL=${APP_URL} \
+    SESSION_SECRET=${SESSION_SECRET} \
+    DATABASE_URL=${DATABASE_URL} \
+    AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+    AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    AWS_REGION=${AWS_REGION} \
+    AWS_BUCKET_NAME=${AWS_BUCKET_NAME} \
+    NETLIFY_AUTH_TOKEN=${NETLIFY_AUTH_TOKEN}
 
-# Pre-configure wrangler to disable metrics
-RUN mkdir -p /root/.config/.wrangler && \
-    echo '{"enabled":false}' > /root/.config/.wrangler/metrics.json
-
+# Build the application
 RUN npm run build
 
-CMD [ "pnpm", "run", "dockerstart"]
+# Set the entry point for production
+CMD [ "pnpm", "run", "dockerstart" ]
 
 # Development image
 FROM base AS bolt-ai-development
 
-# Define the same environment variables for development
+# Same ARG and ENV settings for development
 ARG GROQ_API_KEY
 ARG OPENAI_API_KEY
 ARG ANTHROPIC_API_KEY
@@ -55,6 +79,7 @@ ARG GOOGLE_GENERATIVE_AI_API_KEY
 ARG OLLAMA_API_BASE_URL
 ARG VITE_LOG_LEVEL=debug
 
+# Set environment variables for development
 ENV GROQ_API_KEY=${GROQ_API_KEY} \
     OPENAI_API_KEY=${OPENAI_API_KEY} \
     ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY} \
@@ -64,4 +89,7 @@ ENV GROQ_API_KEY=${GROQ_API_KEY} \
     VITE_LOG_LEVEL=${VITE_LOG_LEVEL}
 
 RUN mkdir -p ${WORKDIR}/run
+
+# Set the entry point for development
 CMD pnpm run dev --host
+
